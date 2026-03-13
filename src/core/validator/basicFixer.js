@@ -80,7 +80,17 @@ export function runBasicFixes(dataTable, config, log) {
        }
        if (!row._modified) row._modified = {};
 
-       if (!row.cp) {
+       if (!row.cp && row.bp) {
+           // If BP exists, the CP is the intersection of EP1-EP2 and the perpendicular from BP
+           // For axis-aligned 90-degree TEEs, CP matches BP on two axes and matches EP1/EP2 on the pipe axis
+           const cp = {};
+           if (row.ep1.x !== row.ep2.x) cp.x = row.bp.x; else cp.x = row.ep1.x;
+           if (row.ep1.y !== row.ep2.y) cp.y = row.bp.y; else cp.y = row.ep1.y;
+           if (row.ep1.z !== row.ep2.z) cp.z = row.bp.z; else cp.z = row.ep1.z;
+           row.cp = cp;
+           row._modified["cp"] = "Calculated";
+           log.push({ type: "Fix", stage: 3, row: row._rowIndex, message: `Row ${row._rowIndex}: Auto-calculated TEE CP from BP perpendicular intersection.` });
+       } else if (!row.cp) {
            row.cp = {
                x: (row.ep1.x + row.ep2.x) / 2,
                y: (row.ep1.y + row.ep2.y) / 2,
@@ -89,6 +99,7 @@ export function runBasicFixes(dataTable, config, log) {
            row._modified["cp"] = "Calculated";
            log.push({ type: "Fix", stage: 3, row: row._rowIndex, message: `Row ${row._rowIndex}: Auto-calculated TEE CP as midpoint.` });
        }
+
        if (!row.bp && row.cp) {
            // Ensure it calculates perpendicular vector if previous points exist, else vertical.
            // A§8 Formula: BP = CP + (brlen * perpendicular_vector)
