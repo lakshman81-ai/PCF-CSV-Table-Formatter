@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../core/state';
 
 export function DataTableTab() {
   const { state, dispatch } = useAppContext();
+  const [filterFixingAction, setFilterFixingAction] = useState('All');
   const data = state.dataTable;
 
   if (!data || data.length === 0) {
@@ -72,6 +73,19 @@ export function DataTableTab() {
         <h2 className="font-bold text-lg">Data Table ({data.length} rows)</h2>
 
         <div className="flex items-center gap-4">
+          <div className="flex items-center mr-4">
+            <label className="text-sm text-gray-700 mr-2 font-semibold">Filter Fixes:</label>
+            <select
+              value={filterFixingAction}
+              onChange={(e) => setFilterFixingAction(e.target.value)}
+              className="border p-1 text-sm rounded bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="All">Show All</option>
+              <option value="HasFix">Has Fixing Action</option>
+              <option value="NoFix">No Fixing Action</option>
+              <option value="SyntaxFixed">Syntax Fixed Only</option>
+            </select>
+          </div>
           <button
             className="px-4 py-1.5 bg-blue-600 text-white text-sm font-bold rounded shadow hover:bg-blue-700 transition"
             onClick={async () => {
@@ -235,7 +249,13 @@ export function DataTableTab() {
             </tr>
           </thead>
           <tbody>
-            {data.map((row, i) => (
+            {data.filter(row => {
+              if (filterFixingAction === 'All') return true;
+              if (filterFixingAction === 'HasFix') return !!row.fixingAction;
+              if (filterFixingAction === 'NoFix') return !row.fixingAction;
+              if (filterFixingAction === 'SyntaxFixed') return row.fixingActionTier === 1 && Object.values(row._modified || {}).includes("Syntax Fixed");
+              return true;
+            }).map((row, i) => (
               <tr key={i} className="hover:bg-gray-50 group">
                 <td className="p-1 px-2 border text-gray-500">{row._rowIndex}</td>
                 <td className={getCellClass(row, 'csvSeqNo')}>{row.csvSeqNo}</td>
@@ -243,7 +263,7 @@ export function DataTableTab() {
                 <td className={getCellClass(row, 'text') + " max-w-[200px] truncate"} title={row.text}>{row.text}</td>
 
                 {/* Smart Fixer Preview Column */}
-                <td className="p-1 px-2 border w-48 relative">
+                <td className="p-1 px-2 border min-w-[36rem] relative">
                   {row.fixingAction && (
                     <div className={`p-1 text-[10px] rounded leading-tight ${
                         row.fixingActionTier === 1 ? "bg-green-100 text-green-800 border-l-2 border-green-500" :
@@ -299,7 +319,7 @@ export function DataTableTab() {
           {state.log.filter(l => l.stage === 3).length === 0 && <span className="text-gray-500">No Stage 3 logs yet. Run calculations or syntax checks above.</span>}
           {state.log.filter(l => l.stage === 3).map((l, i) => (
              <div key={i} className={`mb-1 ${l.type === "Error" ? "text-red-400" : l.type === "Warning" ? "text-amber-400" : l.type === "Fix" ? "text-green-400" : ""}`}>
-               <span className="opacity-50">[{new Date(l.timestamp || Date.now()).toLocaleTimeString().slice(0,5)}]</span> [{l.type}] {l.message}
+               <span className="opacity-50">[{new Date(l.timestamp || Date.now()).toLocaleTimeString().slice(0,5)}]</span> [{l.type}]{l.row ? ` (Row ${l.row})` : ''} {l.message}
              </div>
           ))}
         </div>
