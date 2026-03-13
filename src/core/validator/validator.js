@@ -1,8 +1,8 @@
 /**
  * Core Validator: V1-V20
  */
-import { vec } from '../../utils/math';
-import { registerRule, logRuleExecution } from '../ruleRegistry';
+import { vec } from '../../utils/math.js';
+import { registerRule, logRuleExecution } from '../ruleRegistry.js';
 
 // Register ONLY the Validation rules we explicitly test and have implemented below
 [

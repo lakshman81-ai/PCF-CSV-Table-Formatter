@@ -90,14 +90,24 @@ export function runBasicFixes(dataTable, config, log) {
            row.cp = cp;
            row._modified["cp"] = "Calculated";
            log.push({ type: "Fix", stage: 3, row: row._rowIndex, message: `Row ${row._rowIndex}: Auto-calculated TEE CP from BP perpendicular intersection.` });
-       } else if (!row.cp) {
+       } else if (!row.cp || (row.cp.x > 9900 && row.cp.y > 9900)) {
+           // Detect generic missing or corrupted (9999,9999,9999) CP and recalculate
+           const oldCp = row.cp;
            row.cp = {
                x: (row.ep1.x + row.ep2.x) / 2,
                y: (row.ep1.y + row.ep2.y) / 2,
                z: (row.ep1.z + row.ep2.z) / 2
            };
            row._modified["cp"] = "Calculated";
-           log.push({ type: "Fix", stage: 3, row: row._rowIndex, message: `Row ${row._rowIndex}: Auto-calculated TEE CP as midpoint.` });
+           if (oldCp) {
+               const msg = `[V8 Fix] Re-calculated TEE CP from corrupted/invalid midpoint.`;
+               log.push({ type: "Fix", stage: 3, row: row._rowIndex, message: `Row ${row._rowIndex}: ${msg}` });
+               row.fixingAction = msg;
+               row.fixingActionTier = 1;
+               row.fixingActionRuleId = "V8";
+           } else {
+               log.push({ type: "Fix", stage: 3, row: row._rowIndex, message: `Row ${row._rowIndex}: Auto-calculated TEE CP as midpoint.` });
+           }
        }
 
        if (!row.bp && row.cp) {
@@ -158,6 +168,24 @@ export function runBasicFixes(dataTable, config, log) {
            row.fixingAction = msg;
            row.fixingActionTier = 1;
            row.fixingActionRuleId = "V11";
+       }
+
+       // V21 Auto-fix: OLET missing BP
+       if (!row.bp) {
+           // Basic logic: Try to inherit from next row (branch) if it exists
+           const next = i < result.length - 1 ? result[i + 1] : null;
+           if (next && next.ep1 && type === "OLET") {
+               row.bp = { ...next.ep1 };
+               if (!row._modified) row._modified = {};
+               row._modified["bp"] = "Syntax Fixed";
+               const msg = `[V21 Fix] Auto-calculated OLET BP from connected branch pipe.`;
+               log.push({ type: "Fix", stage: 3, row: row._rowIndex, message: `Row ${row._rowIndex}: ${msg}` });
+               if (!row.fixingActionRuleId) {
+                   row.fixingAction = msg;
+                   row.fixingActionTier = 1;
+                   row.fixingActionRuleId = "V21";
+               }
+           }
        }
     }
     // Assign dummy support coordinate if missing
@@ -231,3 +259,5 @@ function generateMessageSquareText(row) {
 
   return tokens.join(", ");
 }
+
+// Add OLET BP injection for missing BP in BM5
