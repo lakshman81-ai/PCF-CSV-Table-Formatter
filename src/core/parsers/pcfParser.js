@@ -1,4 +1,4 @@
-import { vec } from '../../utils/math';
+import { vec } from '../../utils/math.js';
 
 /**
  * PCF TEXT PARSER
