@@ -116,6 +116,25 @@ export function ConfigTab() {
            <span className="text-xs text-gray-500 italic">Determines the boundary for multi-pass segment logic.</span>
         </div>
 
+        {/* Formatting Config */}
+        <div className="flex items-center space-x-4 mb-6 border-b pb-6">
+           <label className="font-semibold text-sm text-gray-700 w-48">Export Formatting:</label>
+           <label className="flex items-center space-x-2 text-sm text-gray-800">
+             <input
+                type="checkbox"
+                className="form-checkbox h-4 w-4 text-blue-600 rounded"
+                checked={state.config.strictIsogen === true}
+                onChange={(e) => {
+                   dispatch({
+                      type: 'SET_CONFIG',
+                      payload: { strictIsogen: e.target.checked }
+                   });
+                }}
+             />
+             <span>Strict ISOGEN Mode (Removes &lt; &gt; wrappers, ensures benchmark exact compliance)</span>
+           </label>
+        </div>
+
         {/* Row 1: Bore and Sweep Configs */}
         <div className="grid grid-cols-4 gap-6 mb-8">
            <div>

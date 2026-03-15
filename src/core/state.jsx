@@ -5,6 +5,7 @@ const DEFAULT_CONFIG = {
   decimals: 4,
   angleFormat: "degrees",
   crlfMode: true,
+  strictIsogen: false,
   autoMultiPassMode: false, // Overall toggle
   operatingMode: "Auto", // Auto, Sequential, Non-Sequential
   pte: {

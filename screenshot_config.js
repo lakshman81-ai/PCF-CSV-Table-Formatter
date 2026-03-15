@@ -2,10 +2,11 @@ import { test, expect, chromium } from '@playwright/test';
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 1000 }
+  });
 
   await page.goto('http://localhost:3000/');
-
   await page.waitForTimeout(1000);
 
   try {
@@ -15,7 +16,7 @@ import { test, expect, chromium } from '@playwright/test';
   }
 
   await page.waitForTimeout(1000);
-  await page.screenshot({ path: '/home/jules/verification/config_snap2.png' });
+  await page.screenshot({ path: '/home/jules/verification/config_snap3.png', fullPage: true });
 
   await browser.close();
 })();
