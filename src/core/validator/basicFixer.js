@@ -2,6 +2,7 @@
  * BASIC FIXER (Steps 1-4)
  * Implementation of PCF Consolidated Master v2.0 Part C §5.2–5.5
  */
+import { vec } from '../../utils/math.js';
 
 export function runBasicFixes(dataTable, config, log) {
   const result = [...dataTable];
@@ -96,7 +97,7 @@ export function runBasicFixes(dataTable, config, log) {
            row.cp = cp;
            row._modified["cp"] = "Calculated";
            log.push({ type: "Fix", stage: 3, row: row._rowIndex, message: `Row ${row._rowIndex}: Auto-calculated TEE CP from BP perpendicular intersection.` });
-       } else if (!row.cp || (row.cp.x > 9900 && row.cp.y > 9900) || (Math.sqrt(Math.pow(row.cp.x - mid.x, 2) + Math.pow(row.cp.y - mid.y, 2) + Math.pow(row.cp.z - mid.z, 2)) > 0.1)) {
+       } else if (!row.cp || (row.cp.x > 9900 && row.cp.y > 9900) || vec.dist(row.cp, mid) > 0.1) {
            // Detect missing, corrupted (9999,9999,9999), or significantly off-center CP and recalculate
            const oldCp = row.cp;
            row.cp = mid;
